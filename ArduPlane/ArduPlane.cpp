@@ -47,6 +47,11 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(update_compass,         10,    200),
     SCHED_TASK(read_airspeed,          10,    100),
     SCHED_TASK(update_alt,             10,    200),
+
+    /* john */
+    SCHED_TASK(read_aoa,               10,    750),
+    /*      */
+
     SCHED_TASK(adjust_altitude_target, 10,    200),
 #if ADVANCED_FAILSAFE == ENABLED
     SCHED_TASK(afs_fs_check,           10,    100),
@@ -193,6 +198,11 @@ void Plane::update_compass(void)
     }
 }
 
+/* john */
+void Plane::read_aoa(void)
+{
+    aoa_sensor.getRawVoltage();
+}
 /*
   do 10Hz logging
  */

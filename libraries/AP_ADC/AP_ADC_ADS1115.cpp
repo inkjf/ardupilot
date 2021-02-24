@@ -125,6 +125,7 @@ bool AP_ADC_ADS1115::init()
 {
     _dev = hal.i2c_mgr->get_device(ADS1115_I2C_BUS, ADS1115_I2C_ADDR);
     if (!_dev) {
+        hal.console->printf("get_device() failed in AP_ADC_ADS1115.cpp::init\n");
         return false;
     }
 
@@ -143,9 +144,13 @@ bool AP_ADC_ADS1115::_start_conversion(uint8_t channel)
     } config;
 
     config.reg = ADS1115_RA_CONFIG;
-    config.val = htobe16(ADS1115_OS_ACTIVE | _gain | mux_table[channel] |
-                         ADS1115_MODE_SINGLESHOT | ADS1115_COMP_QUE_DISABLE |
-                         ADS1115_RATE_250);
+    // config.val = htobe16(ADS1115_OS_ACTIVE | _gain | mux_table[channel] |
+    //                      ADS1115_MODE_SINGLESHOT | ADS1115_COMP_QUE_DISABLE |
+    //                      ADS1115_RATE_250);
+    config.val = htobe16(ADS1115_OS_ACTIVE | ADS1115_MUX_P0_N1 | _gain |
+                         ADS1115_MODE_SINGLESHOT | ADS1115_RATE_128 | 
+                         ADS1115_COMP_MODE_HYSTERESIS | ADS1115_COMP_POL_ACTIVE_LOW |
+                         ADS1115_COMP_LAT_NON_LATCHING | ADS1115_COMP_QUE_DISABLE);
 
     return _dev->transfer((uint8_t *)&config, sizeof(config), nullptr, 0);
 }
@@ -206,12 +211,14 @@ void AP_ADC_ADS1115::_update()
     be16_t val;
 
     if (!_dev->read_registers(ADS1115_RA_CONFIG, config, sizeof(config))) {
+        hal.console->printf("_dev->read_registers failed in ADS1115\n");
         error("_dev->read_registers failed in ADS1115");
         return;
     }
 
     /* check rdy bit */
     if ((config[1] & 0x80) != 0x80 ) {
+        hal.console->printf("ready bit is set\n");
         return;
     }
 
